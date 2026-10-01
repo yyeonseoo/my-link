@@ -2,24 +2,56 @@
 
 import { useState } from "react";
 import {
-  Mail,
-  BookOpen,
-  Code2,
-  Sparkles,
-  ChevronRight,
   Share2,
   Check,
+  ChevronRight,
+  Sparkles,
+  Code2,
+  BookOpen,
+  Coffee,
+  FileText,
+  Globe,
+  Mail,
+  Flame,
 } from "lucide-react";
+import { MOCK_USER_PROFILE, type LinkItem } from "@/data/links";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-// Lucide에 미포함된 GitHub, Instagram 브랜드 아이콘
-function GithubIcon({ className = "w-5 h-5" }: { className?: string }) {
+// YouTube 브랜드 SVG
+function YoutubeIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+      <polygon points="10 15 15 12 10 9 10 15" fill="currentColor" />
+    </svg>
+  );
+}
+
+// GitHub 브랜드 SVG
+function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -29,14 +61,15 @@ function GithubIcon({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-function InstagramIcon({ className = "w-5 h-5" }: { className?: string }) {
+// Instagram 브랜드 SVG
+function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -47,86 +80,35 @@ function InstagramIcon({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-// 토스 보이스앤톤(해요체) 및 TDS 컬러 체계 적용 데이터
-const PROFILE = {
-  name: "윤연서",
-  handle: "@yeonseo",
-  status: "🌱 지금 바이브 코딩 공부 중이에요",
-  headline: "안녕하세요,\n윤연서예요",
-  bio: "바이브 코딩을 배우고 있어요.\n새로운 기술을 탐구하고 아이디어를 직접 제품으로 만드는 과정을 좋아해요.",
-  tags: ["바이브 코딩", "대학생", "Next.js", "AI 페어프로그래밍"],
-  socialLinks: [
-    {
-      name: "GitHub",
-      url: "https://github.com/yyeonseoo",
-      icon: GithubIcon,
-    },
-    {
-      name: "Instagram",
-      url: "https://instagram.com",
-      icon: InstagramIcon,
-    },
-    {
-      name: "Blog",
-      url: "https://velog.io",
-      icon: BookOpen,
-    },
-    {
-      name: "Email",
-      url: "mailto:ysyoon2013@gmail.com",
-      icon: Mail,
-    },
-  ],
-  links: [
-    {
-      id: "github-repo",
-      title: "GitHub 프로젝트 저장소",
-      description: "진행 중인 프로젝트 코드를 모아뒀어요",
-      url: "https://github.com/yyeonseoo",
-      icon: Code2,
-      badge: "NEW",
-    },
-    {
-      id: "mylink-repo",
-      title: "마이링크 (MyLink)",
-      description: "토스 디자인 시스템(TDS)으로 만든 프로필 링크예요",
-      url: "https://github.com/yyeonseoo/my-link",
-      icon: Sparkles,
-      badge: "TDS",
-      isBrand: true,
-    },
-    {
-      id: "tech-blog",
-      title: "기술 블로그 & 개발 일기",
-      description: "배운 지식과 트러블슈팅 경험을 꾸준히 기록해요",
-      url: "https://velog.io",
-      icon: BookOpen,
-    },
-    {
-      id: "coffee-chat",
-      title: "커피챗 & 연락하기",
-      description: "협업이나 질문은 언제든지 편하게 보내주세요",
-      url: "mailto:ysyoon2013@gmail.com",
-      icon: Mail,
-    },
-  ],
+// 아이콘 이름 매핑 딕셔너리
+const ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Sparkles,
+  Code2,
+  BookOpen,
+  Coffee,
+  Youtube: YoutubeIcon,
+  FileText,
+  Globe,
 };
 
 export default function Home() {
+  const [profile] = useState(MOCK_USER_PROFILE);
+  const [links, setLinks] = useState<LinkItem[]>(MOCK_USER_PROFILE.links);
   const [copied, setCopied] = useState(false);
 
+  // 공유하기 (클립보드 복사 & Web Share API)
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${PROFILE.name} | 마이링크`,
-          text: PROFILE.bio,
+          title: `${profile.name} (@${profile.handle}) | 마이링크`,
+          text: profile.bio,
           url,
         });
         return;
       } catch {
-        // Fallback to clipboard
+        // 취소 또는 미지원 시 클립보드 복사로 대체
       }
     }
 
@@ -139,164 +121,205 @@ export default function Home() {
     }
   };
 
+  // 링크 클릭 이벤트 (클릭수 실시간 집계 및 이동)
+  const handleLinkClick = (id: string, url: string) => {
+    setLinks((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, clickCount: item.clickCount + 1 } : item
+      )
+    );
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  // 공개 페이지에는 활성화(isActive === true)된 링크만 정렬 순서대로 노출
+  const activeLinks = links
+    .filter((link) => link.isActive)
+    .sort((a, b) => a.order - b.order);
+
   return (
-    <main className="min-h-screen bg-[#F2F4F6] dark:bg-[#121316] flex flex-col items-center justify-start py-6 sm:py-10 px-4 font-sans selection:bg-[#3182F6]/15 selection:text-[#3182F6]">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-start py-6 sm:py-10 px-4 font-sans selection:bg-primary/15 selection:text-primary">
       <div className="w-full max-w-[420px] flex flex-col items-center">
-        {/* TDS TopBar (상단 네비게이션) */}
-        <header className="w-full h-14 flex items-center justify-between px-1 mb-2 text-[#191F28] dark:text-[#F9FAFB]">
-          <span className="font-bold text-[18px] tracking-tight">마이링크</span>
-          <button
+        {/* TDS TopBar (상단 내비게이션 바) */}
+        <header className="w-full h-14 flex items-center justify-between px-1 mb-2 text-foreground">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[18px] tracking-tight">마이링크</span>
+            <Badge size="badge" variant="brand">
+              TDS
+            </Badge>
+          </div>
+          {/* shadcn Button (공유 버튼) */}
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleShare}
             aria-label="프로필 링크 공유하기"
-            className="w-10 h-10 rounded-full flex items-center justify-center text-[#6B7684] dark:text-[#8B95A1] hover:bg-black/5 dark:hover:bg-white/10 active:bg-black/10 dark:active:bg-white/20 transition-all cursor-pointer"
-            title="프로필 링크 공유"
+            className="text-muted-foreground hover:text-foreground"
           >
             <Share2 className="w-5 h-5 stroke-[1.8]" />
-          </button>
+          </Button>
         </header>
 
-        {/* 1. 프로필 히어로 카드 (Profile Hero Card) */}
-        <div className="w-full bg-white dark:bg-[#1C1C1F] rounded-[28px] p-6 sm:p-7 shadow-[0_2px_8px_rgba(0,29,58,0.04)] dark:shadow-none border border-[#E5E8EB]/70 dark:border-zinc-800/80 mb-3.5 transition-all">
-          <div className="flex flex-col items-start text-left">
-            {/* 둥근 아바타 & 상태 */}
+        {/* 1. shadcn Card 기반 프로필 히어로 카드 */}
+        <Card className="w-full mb-3.5">
+          <CardHeader className="p-0">
+            {/* 아바타 & 핸들 정보 */}
             <div className="flex items-center gap-3.5 mb-1">
-              <div className="w-16 h-16 rounded-full bg-[#E8F3FF] dark:bg-blue-950/40 text-[#3182F6] dark:text-[#60A5FA] flex items-center justify-center text-2xl font-bold select-none">
-                윤
+              <div className="w-16 h-16 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-2xl font-bold select-none shrink-0 shadow-inner">
+                {profile.name.slice(0, 1)}
               </div>
-              <div className="flex flex-col">
-                <span className="text-[13px] font-semibold text-[#8B95A1] dark:text-zinc-400">
-                  {PROFILE.handle}
+              <div className="flex flex-col min-w-0">
+                <span className="text-[13px] font-semibold text-muted-foreground truncate">
+                  @{profile.handle}
                 </span>
-                <span className="text-[13px] font-medium text-[#4E5968] dark:text-zinc-300 mt-0.5">
-                  {PROFILE.status}
-                </span>
+                {profile.status && (
+                  <span className="text-[13px] font-medium text-foreground/80 mt-0.5 truncate">
+                    {profile.status}
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* 헤드라인 & 소개글 (TDS 해요체) */}
-            <h1 className="mt-5 text-[26px] font-bold text-[#191F28] dark:text-[#F9FAFB] leading-[1.3] tracking-tight whitespace-pre-line">
-              {PROFILE.headline}
-            </h1>
-            <p className="mt-2.5 text-[15px] leading-[1.6] text-[#4E5968] dark:text-zinc-400 whitespace-pre-line">
-              {PROFILE.bio}
-            </p>
+            {/* 헤드라인 타이틀 */}
+            <CardTitle className="mt-4 whitespace-pre-line">
+              {profile.headline || `안녕하세요,\n${profile.name}예요`}
+            </CardTitle>
 
-            {/* TDS Full Pill 칩스 (태그 목록) */}
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {PROFILE.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="h-[34px] px-3.5 rounded-full text-[13px] font-medium flex items-center bg-[#F2F4F6] dark:bg-zinc-800 text-[#4E5968] dark:text-zinc-300 transition-colors"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            {/* 소개 설명글 */}
+            <CardDescription className="mt-2 whitespace-pre-line">
+              {profile.bio}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-0 mt-5">
+            {/* shadcn Badge 기반 TDS Chip 태그 목록 */}
+            {profile.tags && profile.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-6">
+                {profile.tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    size="chip"
+                    variant="secondary"
+                  >
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* 소셜 바로가기 아이콘 바 */}
-            <div className="mt-6 pt-5 w-full border-t border-[#F2F4F6] dark:border-zinc-800/80 flex items-center gap-2">
-              {PROFILE.socialLinks.map((item) => {
-                const Icon = item.icon;
+            <div className="pt-4 w-full border-t border-border flex items-center gap-2">
+              {profile.socialLinks.map((item) => {
+                let SocialIcon: React.ComponentType<{ className?: string }> = Globe;
+                if (item.platform === "github") SocialIcon = GithubIcon;
+                else if (item.platform === "instagram") SocialIcon = InstagramIcon;
+                else if (item.platform === "email") SocialIcon = Mail;
+                else if (item.platform === "youtube") SocialIcon = YoutubeIcon;
+
                 return (
-                  <a
-                    key={item.name}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={item.name}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-[#6B7684] dark:text-zinc-400 bg-[#F9FAFB] dark:bg-zinc-800/60 hover:text-[#191F28] dark:hover:text-white hover:bg-[#F2F4F6] dark:hover:bg-zinc-800 active:scale-95 transition-all"
+                  <Button
+                    key={item.platform}
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => window.open(item.url, "_blank", "noopener,noreferrer")}
+                    aria-label={`${item.platform} 바로가기`}
+                    className="text-muted-foreground hover:text-foreground"
                   >
-                    <Icon className="w-5 h-5" />
-                  </a>
+                    <SocialIcon className="w-4 h-4" />
+                  </Button>
                 );
               })}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* 2. 주요 링크 리스트 카드 (TDS ListRow Group) */}
-        <div className="w-full bg-white dark:bg-[#1C1C1F] rounded-[28px] shadow-[0_2px_8px_rgba(0,29,58,0.04)] dark:shadow-none border border-[#E5E8EB]/70 dark:border-zinc-800/80 overflow-hidden mb-4">
-          <div className="px-6 pt-5 pb-2 text-[14px] font-bold text-[#8B95A1] dark:text-zinc-400">
-            주요 링크
+        {/* 2. shadcn Card 기반 링크 목록 그룹 (TDS ListRow) */}
+        <Card className="w-full overflow-hidden mb-4 p-0">
+          <div className="px-6 pt-5 pb-2.5 flex items-center justify-between text-[13px] font-bold text-muted-foreground tracking-wider">
+            <span>주요 링크 ({activeLinks.length})</span>
+            <span className="font-normal text-[12px] text-muted-foreground/70">
+              클릭 시 새 탭 이동
+            </span>
           </div>
-          <div>
-            {PROFILE.links.map((link, index) => {
-              const Icon = link.icon;
+
+          <div className="divide-y divide-border">
+            {activeLinks.map((link) => {
+              const IconComponent = (link.icon && ICON_COMPONENTS[link.icon]) || Globe;
+
               return (
-                <div key={link.id}>
-                  {index > 0 && (
-                    <div className="mx-6 border-b border-[#F2F4F6] dark:border-zinc-800/80" />
-                  )}
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 px-6 py-4 hover:bg-[#F9FAFB] dark:hover:bg-zinc-800/40 active:bg-[#F2F4F6] dark:active:bg-zinc-800/70 transition-colors text-left group"
+                <button
+                  key={link.id}
+                  onClick={() => handleLinkClick(link.id, link.url)}
+                  className="w-full flex items-center gap-3.5 px-6 py-4 hover:bg-secondary/50 active:bg-secondary active:scale-[0.99] transition-all text-left cursor-pointer group"
+                >
+                  {/* 좌측 44px 아이콘 서피스 */}
+                  <div
+                    className={`w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      link.isHighlighted
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
                   >
-                    {/* 44px 좌측 아이콘 슬롯 */}
-                    <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        link.isBrand
-                          ? "bg-[#E8F3FF] dark:bg-blue-950/40 text-[#3182F6]"
-                          : "bg-[#F2F4F6] dark:bg-zinc-800 text-[#4E5968] dark:text-zinc-300"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 stroke-[1.8]" />
-                    </div>
+                    <IconComponent className="w-5 h-5 stroke-[1.8]" />
+                  </div>
 
-                    {/* 타이틀 및 서브텍스트 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[16px] font-semibold text-[#191F28] dark:text-[#F9FAFB] truncate">
-                          {link.title}
-                        </span>
-                        {link.badge && (
-                          <span
-                            className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                              link.isBrand
-                                ? "bg-[#E8F3FF] dark:bg-blue-950/50 text-[#3182F6] dark:text-[#60A5FA]"
-                                : "bg-[#F2F4F6] dark:bg-zinc-800 text-[#6B7684] dark:text-zinc-400"
-                            }`}
-                          >
-                            {link.badge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[13px] text-[#8B95A1] dark:text-zinc-400 truncate mt-0.5">
+                  {/* 링크 타이틀 & 설명글 & 통계 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[16px] font-semibold text-foreground truncate">
+                        {link.title}
+                      </span>
+                      {link.badge && (
+                        <Badge
+                          size="badge"
+                          variant={link.isHighlighted ? "brand" : "secondary"}
+                        >
+                          {link.badge}
+                        </Badge>
+                      )}
+                    </div>
+                    {link.description && (
+                      <p className="text-[13px] text-muted-foreground truncate mt-0.5">
                         {link.description}
                       </p>
+                    )}
+                    {/* 실시간 클릭수 (TDS tabular-nums 표기) */}
+                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground/80 tabular-nums">
+                      <Flame className="w-3 h-3 text-[#FF6B00]" />
+                      <span>{link.clickCount.toLocaleString()}회 클릭</span>
                     </div>
+                  </div>
 
-                    {/* 우측 슬롯 (Chevron Arrow) */}
-                    <div className="text-[#B0B8C1] dark:text-zinc-500 group-hover:text-[#6B7684] dark:group-hover:text-zinc-300 transition-colors shrink-0">
-                      <ChevronRight className="w-5 h-5 stroke-[2]" />
-                    </div>
-                  </a>
-                </div>
+                  {/* 우측 Chevron Arrow */}
+                  <div className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0">
+                    <ChevronRight className="w-5 h-5 stroke-[2]" />
+                  </div>
+                </button>
               );
             })}
           </div>
-        </div>
+        </Card>
 
-        {/* 3. Primary CTA (토스 카노니컬 블루 단일 1차 액션 버튼) */}
+        {/* 3. shadcn Button (TDS Primary CTA - XL 56px, 16px radius, Toss Blue) */}
         <div className="w-full">
-          <button
+          <Button
+            size="xl"
+            variant="primary"
             onClick={handleShare}
-            className="w-full h-14 rounded-2xl bg-[#3182F6] hover:bg-[#2272EB] active:bg-[#1B64DA] text-white text-[17px] font-bold transition-all flex items-center justify-center gap-2 shadow-[0_2px_8px_rgba(49,130,246,0.24)] active:scale-[0.99] cursor-pointer"
+            className="w-full"
           >
             <span>프로필 링크 복사하기</span>
-          </button>
+          </Button>
         </div>
 
         {/* 푸터 */}
         <footer className="mt-8 pb-6 text-center">
-          <p className="text-[13px] font-normal text-[#8B95A1] dark:text-zinc-500">
-            © 2026 {PROFILE.name} · 마이링크
+          <p className="text-[13px] font-normal text-muted-foreground">
+            © 2026 {profile.name} · 마이링크
           </p>
         </footer>
       </div>
 
-      {/* TDS Toast 알림 (grey-900 표면 + green-500 원형 체크 + 해요체) */}
+      {/* TDS Toast 피드백 (grey-900 서피스 + green-500 체크) */}
       <div
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-[14px] bg-[#191F28] text-white text-[15px] font-medium shadow-[0_8px_24px_rgba(0,29,58,0.16)] transition-all duration-200 pointer-events-none ${
           copied

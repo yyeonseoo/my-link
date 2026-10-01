@@ -1,29 +1,123 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* 토스 디자인 시스템 (TDS, design.md) 공식 OKLCH 토큰 매핑 */
 :root {
-  --background: #f2f4f6; /* grey-100 */
-  --foreground: #191f28; /* grey-900 */
   --font-pretendard: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", Roboto, sans-serif;
+  
+  /* TDS Brand & Surface */
+  --background: oklch(0.978 0.003 247); /* grey-50: 전체 앱 기본 배경 */
+  --foreground: oklch(0.234 0.030 254); /* grey-900: 본문 및 주요 헤드라인 */
+  
+  --card: oklch(1 0 0); /* white: 평면 카드 캔버스 */
+  --card-foreground: oklch(0.234 0.030 254); /* grey-900 */
+  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.234 0.030 254);
+  
+  --primary: oklch(0.624 0.176 254); /* blue-500: 카노니컬 Toss Blue (화면당 1개 primary CTA) */
+  --primary-foreground: oklch(1 0 0); /* white */
+  
+  --secondary: oklch(0.957 0.005 247); /* grey-100: 보조 서피스 */
+  --secondary-foreground: oklch(0.234 0.030 254); /* grey-900 */
+  
+  --muted: oklch(0.957 0.005 247); /* grey-100 */
+  --muted-foreground: oklch(0.452 0.028 253); /* grey-700: 보조 텍스트 */
+  
+  --accent: oklch(0.965 0.020 250); /* blue-50: brand-weak 배경 */
+  --accent-foreground: oklch(0.624 0.176 254); /* blue-500 */
+  
+  --destructive: oklch(0.628 0.218 22); /* red-500: 에러 및 삭제 */
+  --destructive-foreground: oklch(1 0 0);
+  
+  --border: oklch(0.913 0.008 247); /* grey-200: 기본 디바이더 / 헤어라인 보더 */
+  --input: oklch(0.957 0.005 247); /* grey-100: resting 인풋 배경 */
+  --ring: oklch(0.624 0.176 254); /* blue-500 */
+  
+  /* TDS 라운드 토큰 */
+  --radius: 1rem; /* 16px */
+  --radius-xs: 4px;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 999px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-pretendard);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121316;
-    --foreground: #f9fafb;
-  }
+  --font-heading: var(--font-pretendard);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: var(--radius-s);
+  --radius-md: var(--radius-m);
+  --radius-lg: var(--radius-l);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+  --radius-full: var(--radius-full);
 }
 
 body {
   background-color: var(--background);
-  color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.dark {
+  --background: oklch(0.155 0.060 261); /* navy-900 딥 다크 배경 */
+  --foreground: oklch(0.978 0.003 247); /* grey-50 */
+  --card: oklch(0.234 0.030 254); /* grey-900 서피스 */
+  --card-foreground: oklch(0.978 0.003 247);
+  --popover: oklch(0.234 0.030 254);
+  --popover-foreground: oklch(0.978 0.003 247);
+  --primary: oklch(0.624 0.176 254); /* Toss Blue */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.342 0.030 253); /* grey-800 */
+  --secondary-foreground: oklch(0.978 0.003 247);
+  --muted: oklch(0.342 0.030 253);
+  --muted-foreground: oklch(0.652 0.020 252); /* grey-500 */
+  --accent: oklch(0.342 0.030 253);
+  --accent-foreground: oklch(0.624 0.176 254);
+  --destructive: oklch(0.628 0.218 22);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.342 0.030 253);
+  --input: oklch(0.342 0.030 253);
+  --ring: oklch(0.624 0.176 254);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
