@@ -13,6 +13,9 @@ import {
   Globe,
   Mail,
   Flame,
+  Plus,
+  ShoppingBag,
+  Video,
 } from "lucide-react";
 import { MOCK_USER_PROFILE, type LinkItem } from "@/data/links";
 import {
@@ -24,6 +27,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AddLinkDialog } from "@/components/add-link-dialog";
 
 // YouTube 브랜드 SVG
 function YoutubeIcon({ className = "w-4 h-4" }: { className?: string }) {
@@ -89,12 +93,28 @@ const ICON_COMPONENTS: Record<string, React.ComponentType<{ className?: string }
   Youtube: YoutubeIcon,
   FileText,
   Globe,
+  Instagram: InstagramIcon,
+  Mail,
+  ShoppingBag,
+  Video,
 };
 
 export default function Home() {
   const [profile] = useState(MOCK_USER_PROFILE);
   const [links, setLinks] = useState<LinkItem[]>(MOCK_USER_PROFILE.links);
-  const [copied, setCopied] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [toast, setToast] = useState<{ open: boolean; message: string }>({
+    open: false,
+    message: "",
+  });
+
+  // 토스 토스트 알림 표시 헬퍼
+  const showToast = (message: string) => {
+    setToast({ open: true, message });
+    setTimeout(() => {
+      setToast({ open: false, message: "" });
+    }, 2400);
+  };
 
   // 공유하기 (클립보드 복사 & Web Share API)
   const handleShare = async () => {
@@ -114,11 +134,30 @@ export default function Home() {
 
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2400);
+      showToast("프로필 링크를 복사했어요");
     } catch {
       alert("링크 복사에 실패했어요.");
     }
+  };
+
+  // 새 링크 추가 (로컬 상태)
+  const handleAddLink = (
+    newLinkData: Omit<LinkItem, "id" | "order" | "clickCount" | "createdAt">
+  ) => {
+    const newLink: LinkItem = {
+      ...newLinkData,
+      id: `link-${Date.now()}`,
+      order: 0,
+      clickCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    setLinks((prev) => [
+      newLink,
+      ...prev.map((item) => ({ ...item, order: item.order + 1 })),
+    ]);
+
+    showToast("새 링크를 추가했어요");
   };
 
   // 링크 클릭 이벤트 (클릭수 실시간 집계 및 이동)
@@ -234,68 +273,113 @@ export default function Home() {
 
         {/* 2. shadcn Card 기반 링크 목록 그룹 (TDS ListRow) */}
         <Card className="w-full overflow-hidden mb-4 p-0">
-          <div className="px-6 pt-5 pb-2.5 flex items-center justify-between text-[13px] font-bold text-muted-foreground tracking-wider">
-            <span>주요 링크 ({activeLinks.length})</span>
-            <span className="font-normal text-[12px] text-muted-foreground/70">
-              클릭 시 새 탭 이동
-            </span>
+          <div className="px-6 pt-5 pb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[14px] font-bold text-foreground">주요 링크</span>
+              <Badge size="badge" variant="secondary" className="px-1.5 font-bold tabular-nums">
+                {activeLinks.length}
+              </Badge>
+            </div>
+            {/* 링크 추가 헤더 액션 버튼 */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAddDialogOpen(true)}
+              className="text-primary hover:text-primary hover:bg-primary/10 gap-1 text-[13px] font-semibold h-8 px-2.5 rounded-[10px]"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>링크 추가</span>
+            </Button>
           </div>
 
-          <div className="divide-y divide-border">
-            {activeLinks.map((link) => {
-              const IconComponent = (link.icon && ICON_COMPONENTS[link.icon]) || Globe;
+          {activeLinks.length === 0 ? (
+            <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground mb-3">
+                <Globe className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <p className="text-[15px] font-semibold text-foreground">
+                등록된 링크가 아직 없어요
+              </p>
+              <p className="text-[13px] text-muted-foreground mt-1 mb-4">
+                새 링크를 추가해서 나만의 프로필을 완성해 보세요.
+              </p>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                <span>새 링크 추가하기</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {activeLinks.map((link) => {
+                const IconComponent = (link.icon && ICON_COMPONENTS[link.icon]) || Globe;
 
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => handleLinkClick(link.id, link.url)}
-                  className="w-full flex items-center gap-3.5 px-6 py-4 hover:bg-secondary/50 active:bg-secondary active:scale-[0.99] transition-all text-left cursor-pointer group"
-                >
-                  {/* 좌측 44px 아이콘 서피스 */}
-                  <div
-                    className={`w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                      link.isHighlighted
-                        ? "bg-accent text-accent-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => handleLinkClick(link.id, link.url)}
+                    className="w-full flex items-center gap-3.5 px-6 py-4 hover:bg-secondary/50 active:bg-secondary active:scale-[0.99] transition-all text-left cursor-pointer group"
                   >
-                    <IconComponent className="w-5 h-5 stroke-[1.8]" />
-                  </div>
+                    {/* 좌측 44px 아이콘 서피스 */}
+                    <div
+                      className={`w-11 h-11 rounded-[14px] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                        link.isHighlighted
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      <IconComponent className="w-5 h-5 stroke-[1.8]" />
+                    </div>
 
-                  {/* 링크 타이틀 & 설명글 & 통계 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[16px] font-semibold text-foreground truncate">
-                        {link.title}
-                      </span>
-                      {link.badge && (
-                        <Badge
-                          size="badge"
-                          variant={link.isHighlighted ? "brand" : "secondary"}
-                        >
-                          {link.badge}
-                        </Badge>
+                    {/* 링크 타이틀 & 설명글 & 통계 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[16px] font-semibold text-foreground truncate">
+                          {link.title}
+                        </span>
+                        {link.badge && (
+                          <Badge
+                            size="badge"
+                            variant={link.isHighlighted ? "brand" : "secondary"}
+                          >
+                            {link.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      {link.description && (
+                        <p className="text-[13px] text-muted-foreground truncate mt-0.5">
+                          {link.description}
+                        </p>
                       )}
+                      {/* 실시간 클릭수 (TDS tabular-nums 표기) */}
+                      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground/80 tabular-nums">
+                        <Flame className="w-3 h-3 text-[#FF6B00]" />
+                        <span>{link.clickCount.toLocaleString()}회 클릭</span>
+                      </div>
                     </div>
-                    {link.description && (
-                      <p className="text-[13px] text-muted-foreground truncate mt-0.5">
-                        {link.description}
-                      </p>
-                    )}
-                    {/* 실시간 클릭수 (TDS tabular-nums 표기) */}
-                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground/80 tabular-nums">
-                      <Flame className="w-3 h-3 text-[#FF6B00]" />
-                      <span>{link.clickCount.toLocaleString()}회 클릭</span>
-                    </div>
-                  </div>
 
-                  {/* 우측 Chevron Arrow */}
-                  <div className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0">
-                    <ChevronRight className="w-5 h-5 stroke-[2]" />
-                  </div>
-                </button>
-              );
-            })}
+                    {/* 우측 Chevron Arrow */}
+                    <div className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0">
+                      <ChevronRight className="w-5 h-5 stroke-[2]" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 카드 하단 빠른 추가 버튼 */}
+          <div className="p-3 bg-secondary/30 border-t border-border">
+            <button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="w-full py-2.5 px-4 rounded-[12px] border border-dashed border-border bg-card/60 hover:bg-card hover:border-primary/50 text-[13px] font-semibold text-muted-foreground hover:text-primary flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.99]"
+            >
+              <Plus className="w-4 h-4 stroke-[2]" />
+              <span>새 링크 추가하기</span>
+            </button>
           </div>
         </Card>
 
@@ -319,10 +403,17 @@ export default function Home() {
         </footer>
       </div>
 
+      {/* 새 링크 추가 다이얼로그 (로컬 상태 연동) */}
+      <AddLinkDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAddLink={handleAddLink}
+      />
+
       {/* TDS Toast 피드백 (grey-900 서피스 + green-500 체크) */}
       <div
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3.5 rounded-[14px] bg-[#191F28] text-white text-[15px] font-medium shadow-[0_8px_24px_rgba(0,29,58,0.16)] transition-all duration-200 pointer-events-none ${
-          copied
+          toast.open
             ? "opacity-100 translate-y-0 scale-100"
             : "opacity-0 translate-y-3 scale-95"
         }`}
@@ -330,7 +421,7 @@ export default function Home() {
         <div className="w-5 h-5 rounded-full bg-[#059669] flex items-center justify-center shrink-0">
           <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
         </div>
-        <span>프로필 링크를 복사했어요</span>
+        <span>{toast.message}</span>
       </div>
     </main>
   );
