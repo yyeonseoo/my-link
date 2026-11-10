@@ -68,7 +68,7 @@ export const MOCK_LINKS: LinkItem[] = [
     id: "link-3",
     title: "기술 블로그 & 개발 일기",
     description: "새롭게 배운 기술과 실무 트러블슈팅 경험을 솔직하게 기록해요",
-    url: "https://velog.io",
+    url: "https://velog.io/@yyyeonseooo/posts",
     icon: "BookOpen",
     badge: "HOT",
     isActive: true,
